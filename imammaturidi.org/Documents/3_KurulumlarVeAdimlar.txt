@@ -1,0 +1,78 @@
+﻿--1. adım Nuget Paketler
+    --postgresql için
+    dotnet tool install --global dotnet-ef
+    dotnet tool update --global dotnet-ef
+
+    -Npgsql.EntityFrameworkCore.PostgreSQL
+                        ---> Yüklediği bağımlılıklar.
+                        Microsoft.EntityFrameworkCore.8.0.4
+                        Microsoft.EntityFrameworkCore.Abstractions.8.0.4
+                        Microsoft.EntityFrameworkCore.Analyzers.8.0.4
+                        Microsoft.EntityFrameworkCore.Relational.8.0.4
+                        Microsoft.Extensions.Caching.Abstractions.8.0.0
+                        Microsoft.Extensions.Caching.Memory.8.0.0
+                        Microsoft.Extensions.Configuration.Abstractions.8.0.0
+                        Microsoft.Extensions.DependencyInjection.8.0.0
+                        Microsoft.Extensions.DependencyInjection.Abstractions.8.0.0
+                        Microsoft.Extensions.Logging.8.0.0
+                        Microsoft.Extensions.Logging.Abstractions.8.0.0
+                        Microsoft.Extensions.Options.8.0.0
+                        Microsoft.Extensions.Primitives.8.0.0
+                        Npgsql.8.0.3
+                        Npgsql.EntityFrameworkCore.PostgreSQL.8.0.4
+
+    -Microsoft.EntityFrameworkCore.Tools
+
+    -Microsoft.EntityFrameworkCore.Design
+
+paketleri öncelikli yüklenecek.
+
+--2. adım Projee yapısı 
+
+    WEB Uygulaması (imammaturidi.org)
+        -->Business
+        -->DataAccess
+        -->Core
+
+
+
+
+--3. adım Connection String ve Scaffolding
+    --imammaturidi.org altundaki appsettings.json dosyasına aşağıdaki connection string alanını ekliyoruz.
+      "ConnectionStrings": {
+        "QaSectionDB": "Host=localhost; Database=qasection; Port=1453; Username=postgres; Password=a1Lfgh444"
+      }
+
+    --DBFirst Yaklaşımı ile DataAccess assemblysine dbcontexti ekliyoruz...
+    dotnet ef dbcontext scaffold "Name=QaSectionDB" Npgsql.EntityFrameworkCore.PostgreSql -c "QaDbContext" --force --context-dir EF --output-dir DBModels --project DataAccess --startup-project imammaturidi.org --no-onconfiguring
+
+
+    --QaDBContext ile aynı alanda aşağıdaki dosya oluşturuldu:
+    --Dosya Adı: QaDbContext_OnConfiguring.cs
+
+        using System;
+        using System.Collections.Generic;
+        using DataAccess.DBModels;
+        using Microsoft.EntityFrameworkCore;
+        using static System.Collections.Specialized.BitVector32;
+
+        namespace DataAccess.EF;
+
+        public partial class QaDbContext : DbContext
+        {
+            protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+            {
+                if (!optionsBuilder.IsConfigured)
+                {
+                    optionsBuilder.UseNpgsql($"Name=QaSectionDB");
+                }
+        #if DEBUG
+                optionsBuilder
+                    .LogTo(message => System.Diagnostics.Debug.WriteLine(message + "\n---------------------------------------------------"))
+                    .EnableSensitiveDataLogging(true)
+                    .EnableDetailedErrors();
+        #endif
+            }
+        }
+
+

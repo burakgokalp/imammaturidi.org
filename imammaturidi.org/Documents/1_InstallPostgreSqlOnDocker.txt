@@ -1,0 +1,8 @@
+docker network create --subnet=172.22.0.0/16 localnetwork
+
+docker volume create v_postgres
+
+docker run --name c_Postgres_test --net localnetwork --ip 172.22.0.30 --hostname postgres_test -e POSTGRES_PASSWORD=a1Lfgh444 -e LANG=en_US.utf8 -e POSTGRES_INITDB_ARGS="--locale-provider=icu --icu-locale=en_US" -d -p 1453:5432 -v v_postgres:/var/lib/postgresql/data postgres:16.3
+
+timezone ile kurulum:
+ docker run --name c_Postgres_test --net localnetwork --ip 172.22.0.30 --hostname postgres_test -e POSTGRES_PASSWORD=a1Lfgh444 -e LANG=en_US.utf8 -e POSTGRES_INITDB_ARGS="--locale-provider=icu --icu-locale=en_US" -e TZ=Europe/Istanbul -d -p 1453:5432 -v v_postgres:/var/lib/postgresql/data postgres:16.3

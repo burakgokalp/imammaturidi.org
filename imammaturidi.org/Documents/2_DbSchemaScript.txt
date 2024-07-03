@@ -1,0 +1,121 @@
+﻿--öncelikle veritabanı oluştur:
+DROP DATABASE IF EXISTS qasection;
+--
+-- TOC entry 3442 (class 1262 OID 24576)
+-- Name: qasection; Type: DATABASE; Schema: -; Owner: postgres
+--
+
+CREATE DATABASE qasection WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PROVIDER = icu LOCALE = 'en_US.utf8' ICU_LOCALE = 'en_US';
+
+
+ALTER DATABASE qasection OWNER TO postgres;
+
+COMMENT ON DATABASE qasection IS 'DB for Question / Answer system';
+
+--qasection ile bağlan ve aşağıdaki tabloları oluştur:
+
+
+
+
+CREATE TABLE Users (
+    UserID SERIAL PRIMARY KEY,
+    Username VARCHAR(255) NOT NULL,
+    Email VARCHAR(255) NOT NULL,
+    PasswordHash VARCHAR(255) NOT NULL,
+    CreationDate TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
+    UpdateDate TIMESTAMP WITHOUT TIME ZONE NULL
+);
+
+CREATE TABLE Roles (
+    RoleID SERIAL PRIMARY KEY,
+    RoleName VARCHAR(50) NOT NULL,
+    CreationDate TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
+    UpdateDate TIMESTAMP WITHOUT TIME ZONE NULL
+);
+
+CREATE TABLE UserRoles (
+    UserRoleID SERIAL PRIMARY KEY,
+    UserID INT REFERENCES Users(UserID) NOT NULL,
+    RoleID INT REFERENCES Roles(RoleID) NOT NULL,
+    CreationDate TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
+    UpdateDate TIMESTAMP WITHOUT TIME ZONE NULL,
+    UNIQUE (UserID, RoleID)
+);
+
+CREATE TABLE Languages (
+    LanguageID SERIAL PRIMARY KEY,
+    LanguageCode VARCHAR(10) NOT NULL,
+    LanguageName VARCHAR(100) NOT NULL,
+    CreationDate TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
+    UpdateDate TIMESTAMP WITHOUT TIME ZONE NULL
+);
+
+CREATE TABLE Topics (
+    TopicID SERIAL PRIMARY KEY,
+    ParentTopicID INT REFERENCES Topics(TopicID),
+    RelatedTopicID INT REFERENCES Topics(TopicID),
+    LanguageID INT REFERENCES Languages(LanguageID) NOT NULL,
+    TopicName VARCHAR(255) NOT NULL,
+    CreationDate TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
+    UpdateDate TIMESTAMP WITHOUT TIME ZONE NULL
+);
+
+CREATE TABLE Articles (
+    ArticleID SERIAL PRIMARY KEY,
+    LanguageID INT REFERENCES Languages(LanguageID) NOT NULL,
+    UserID INT REFERENCES Users(UserID) NOT NULL,
+    ParentArticleID INT REFERENCES Articles(ArticleID),
+    RelatedArticleID INT REFERENCES Articles(ArticleID),
+    QuestionText TEXT NOT NULL,
+    AnswerText TEXT NOT NULL,
+    CreationDate TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
+    UpdateDate TIMESTAMP WITHOUT TIME ZONE NULL
+);
+
+CREATE TABLE ArticleTopics (
+    ArticleTopicID SERIAL PRIMARY KEY,
+    ArticleID INT REFERENCES Articles(ArticleID) NOT NULL,
+    TopicID INT REFERENCES Topics(TopicID) NOT NULL,
+    OrderNumber INT DEFAULT 0,
+    CreationDate TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
+    UpdateDate TIMESTAMP WITHOUT TIME ZONE NULL,
+    UNIQUE (ArticleID, TopicID)
+);
+
+CREATE TABLE UserLogs (
+    LogID SERIAL PRIMARY KEY,
+    UserID INT REFERENCES Users(UserID),  -- Kullanıcı kimliği
+    DateTime TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),  -- İstek zamanı
+    UserIP VARCHAR(64),  -- Kullanıcının IP adresi (IPv4 ve IPv6 için yeterli)
+    RefererURL VARCHAR(2048),  -- Referer URL
+    HttpRequestMethod VARCHAR(10),  -- HTTP istek metodu (GET, POST, vb.)
+    HttpRequestQuery TEXT,  -- HTTP istek sorgusu
+    RequestedURL VARCHAR(2048),  -- Talep edilen URL
+    UserAgent TEXT,  -- Kullanıcı tarayıcı bilgisi
+    BrowserName VARCHAR(100),  -- Tarayıcı adı
+    BrowserVersion VARCHAR(20),  -- Tarayıcı versiyonu
+    StatusCode INT,  -- HTTP yanıt durum kodu
+    ResponseTime INT,  -- Yanıt süresi (milisaniye cinsinden)
+    Country VARCHAR(100)  -- Kullanıcının ülke bilgisi
+);
+
+
+---initialization datas
+
+INSERT INTO Roles (RoleName, CreationDate) VALUES
+('Admin', NOW()),
+('Editor', NOW()),
+('SimpleUser', NOW());
+
+-- Users tablosuna başlangıç verisini ekleme (şifre: brk1453)
+INSERT INTO Users (Username, Email, PasswordHash, CreationDate) VALUES
+('Burak', 'burakgokalp@yandex.com', 'a6de44b29cc132b35392da9dd943dcc1fa5f1a9a7714b9e03edc2a48c073c310', NOW());
+
+INSERT INTO UserRoles (UserID, RoleID, CreationDate) VALUES
+(1, 1, NOW());
+
+INSERT INTO Languages (LanguageCode, LanguageName, CreationDate) VALUES
+('tr', 'Türkçe', NOW()),
+('en', 'English', NOW()),
+('nl', 'Dutch', NOW()),
+('de', 'Deutsch', NOW());
