@@ -11,23 +11,17 @@ namespace imammaturidi.org
             
             var conf = builder.Configuration;
 
-            #region EKLEDİKLERİM
-            string connString = conf.GetConnectionString("QaSectionDB")!;
-            builder.Services.AddDbContext<DataAccess.EF.QaDbContext>(options =>
-            {
-                options.UseNpgsql(connString);
-                if (builder.Environment.EnvironmentName.Equals(Environments.Development))
-                    options.LogTo(message => System.Diagnostics.Debug.WriteLine(message + "\n---------------------------------------------------"))
-                        .EnableSensitiveDataLogging(true)
-                        .EnableDetailedErrors();
-            });    //dbcontext
-            #endregion EKLEDİKLERİM
+            //Kendi ekleyeceklerim bu sınıf içinde....
+            var customServices = new CustomConfigureServices(builder);
+            customServices.AddControllersWithViews();
+            customServices.AddPostgreDbContext();
+
 
             // Add services to the container.
-            builder.Services.AddControllersWithViews();
+            //builder.Services.AddControllersWithViews();
 
             var app = builder.Build();
-
+            var customMiddleWare = new CustomHttpMiddleware(app);
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {

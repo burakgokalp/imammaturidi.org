@@ -4,7 +4,7 @@ namespace imammaturidi.org.ViewModels
 {
     public class Login
     {
-        [Required(AllowEmptyStrings = false, ErrorMessage)]
+        [Required(AllowEmptyStrings = false)]
         public string UserName { get; set; }
     }
 }
