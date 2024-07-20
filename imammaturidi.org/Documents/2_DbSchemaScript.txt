@@ -17,37 +17,44 @@ COMMENT ON DATABASE qasection IS 'DB for Question / Answer system';
 
 
 
+
+-- Tabloları oluştur
+
 CREATE TABLE Users (
     UserID SERIAL PRIMARY KEY,
     Username VARCHAR(255) NOT NULL,
     Email VARCHAR(255) NOT NULL,
     PasswordHash VARCHAR(255) NOT NULL,
-    CreationDate TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
-    UpdateDate TIMESTAMP WITHOUT TIME ZONE NULL
+    CreationDate TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+    UpdateDate TIMESTAMP WITH TIME ZONE NULL
 );
 
 CREATE TABLE Roles (
     RoleID SERIAL PRIMARY KEY,
     RoleName VARCHAR(50) NOT NULL,
-    CreationDate TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
-    UpdateDate TIMESTAMP WITHOUT TIME ZONE NULL
+    CreationDate TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+    UpdateDate TIMESTAMP WITH TIME ZONE NULL
 );
 
 CREATE TABLE UserRoles (
     UserRoleID SERIAL PRIMARY KEY,
     UserID INT REFERENCES Users(UserID) NOT NULL,
     RoleID INT REFERENCES Roles(RoleID) NOT NULL,
-    CreationDate TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
-    UpdateDate TIMESTAMP WITHOUT TIME ZONE NULL,
+    CreationDate TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+    UpdateDate TIMESTAMP WITH TIME ZONE NULL,
     UNIQUE (UserID, RoleID)
 );
 
 CREATE TABLE Languages (
     LanguageID SERIAL PRIMARY KEY,
     LanguageCode VARCHAR(10) NOT NULL,
+    IsoLanguageCode VARCHAR(10) NOT NULL,
     LanguageName VARCHAR(100) NOT NULL,
-    CreationDate TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
-    UpdateDate TIMESTAMP WITHOUT TIME ZONE NULL
+    IsActive BOOLEAN DEFAULT TRUE NOT NULL,
+    IsPublished BOOLEAN DEFAULT TRUE NOT NULL,
+    DefaultTimeZone SMALLINT NULL,
+    CreationDate TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+    UpdateDate TIMESTAMP WITH TIME ZONE NULL
 );
 
 CREATE TABLE Topics (
@@ -56,8 +63,15 @@ CREATE TABLE Topics (
     RelatedTopicID INT REFERENCES Topics(TopicID),
     LanguageID INT REFERENCES Languages(LanguageID) NOT NULL,
     TopicName VARCHAR(255) NOT NULL,
-    CreationDate TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
-    UpdateDate TIMESTAMP WITHOUT TIME ZONE NULL
+    CreationDate TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+    UpdateDate TIMESTAMP WITH TIME ZONE NULL,
+    PublishDate TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    PublisherUserID INT REFERENCES Users(UserID)
+);
+
+CREATE TABLE ArticleTypes (
+    ArticleTypeID SERIAL PRIMARY KEY,
+    ArticleType VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE Articles (
@@ -66,10 +80,13 @@ CREATE TABLE Articles (
     UserID INT REFERENCES Users(UserID) NOT NULL,
     ParentArticleID INT REFERENCES Articles(ArticleID),
     RelatedArticleID INT REFERENCES Articles(ArticleID),
-    QuestionText TEXT NOT NULL,
+    ArticleTypeID INT REFERENCES ArticleTypes(ArticleTypeID) DEFAULT 1 NOT NULL,
+    Subject VARCHAR(2000) NOT NULL,
     AnswerText TEXT NOT NULL,
-    CreationDate TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
-    UpdateDate TIMESTAMP WITHOUT TIME ZONE NULL
+    CreationDate TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+    UpdateDate TIMESTAMP WITH TIME ZONE NULL,
+    PublishDate TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    PublisherUserID INT REFERENCES Users(UserID)
 );
 
 CREATE TABLE ArticleTopics (
@@ -77,15 +94,15 @@ CREATE TABLE ArticleTopics (
     ArticleID INT REFERENCES Articles(ArticleID) NOT NULL,
     TopicID INT REFERENCES Topics(TopicID) NOT NULL,
     OrderNumber INT DEFAULT 0,
-    CreationDate TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
-    UpdateDate TIMESTAMP WITHOUT TIME ZONE NULL,
+    CreationDate TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+    UpdateDate TIMESTAMP WITH TIME ZONE NULL,
     UNIQUE (ArticleID, TopicID)
 );
 
 CREATE TABLE UserLogs (
     LogID SERIAL PRIMARY KEY,
     UserID INT REFERENCES Users(UserID),  -- Kullanıcı kimliği
-    DateTime TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),  -- İstek zamanı
+    DateTime TIMESTAMP WITH TIME ZONE DEFAULT NOW(),  -- İstek zamanı
     UserIP VARCHAR(64),  -- Kullanıcının IP adresi (IPv4 ve IPv6 için yeterli)
     RefererURL VARCHAR(2048),  -- Referer URL
     HttpRequestMethod VARCHAR(10),  -- HTTP istek metodu (GET, POST, vb.)
@@ -99,8 +116,30 @@ CREATE TABLE UserLogs (
     Country VARCHAR(100)  -- Kullanıcının ülke bilgisi
 );
 
+CREATE TABLE Comments (
+    CommentID SERIAL PRIMARY KEY,
+    UserID INT REFERENCES Users(UserID) NOT NULL,
+    Comment TEXT NOT NULL,
+    RepliedCommentID INT REFERENCES Comments(CommentID) DEFAULT NULL,
+    CreationDate TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+    UpdateDate TIMESTAMP WITH TIME ZONE NULL
+);
 
----initialization datas
+CREATE TABLE Tags (
+    TagID SERIAL PRIMARY KEY,
+    Tag VARCHAR(100) NOT NULL,
+    CreationDate TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+    IsActive BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE ArticleTags (
+    ArticleTagID SERIAL PRIMARY KEY,
+    ArticleID INT REFERENCES Articles(ArticleID) NOT NULL,
+    TagID INT REFERENCES Tags(TagID) NOT NULL,
+    IsActive BOOLEAN DEFAULT TRUE
+);
+
+-- Başlangıç verilerini ekle
 
 INSERT INTO Roles (RoleName, CreationDate) VALUES
 ('Admin', NOW()),
@@ -114,8 +153,12 @@ INSERT INTO Users (Username, Email, PasswordHash, CreationDate) VALUES
 INSERT INTO UserRoles (UserID, RoleID, CreationDate) VALUES
 (1, 1, NOW());
 
-INSERT INTO Languages (LanguageCode, LanguageName, CreationDate) VALUES
-('tr', 'Türkçe', NOW()),
-('en', 'English', NOW()),
-('nl', 'Dutch', NOW()),
-('de', 'Deutsch', NOW());
+INSERT INTO Languages (LanguageCode, IsoLanguageCode, LanguageName, CreationDate) VALUES
+('tr', 'tr-TR', 'Türkçe', NOW()),
+('en', 'en-US', 'English', NOW()),
+('nl', 'nl-NL', 'Dutch', NOW()),
+('de', 'de-DE', 'Deutsch', NOW());
+
+INSERT INTO ArticleTypes (ArticleType) VALUES
+('QuestionAnswer'),
+('VideoContent');
