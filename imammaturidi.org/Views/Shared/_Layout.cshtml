@@ -1,6 +1,12 @@
-﻿<!DOCTYPE html>
+﻿@{
+    bool isUserAuthenticated = User.Identity.IsAuthenticated;
+    string userName = (isUserAuthenticated) ? User.Claims.Where(c => c.Type == ClaimTypes.Name).First().Value : String.Empty;
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - imammaturidi.org</title>
@@ -23,7 +29,20 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Topic" asp-action="Index">Topics</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Article" asp-action="LastArticles">Last Articles</a>
+                        </li>
+                        <li class="nav-item">
+                            @if (isUserAuthenticated)
+                            {
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Logout">@userName Logout</a>
+                            }
+                            else
+                            {
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
+                            }                            
                         </li>
                     </ul>
                 </div>
@@ -41,9 +60,10 @@
             &copy; 2024 - imammaturidi.org - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js" async></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" async></script>
+    <script src="~/js/site.js" asp-append-version="true" async></script>
+    @await Html.PartialAsync("_ValidationScriptsPartial.cshtml")
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -9,11 +9,18 @@ namespace DataAccess
 {
     public interface IUsersDAL
     {
-        User GetUserInfo(string Username, string Password);
-        User GetUserInfo(int Userid);
+        /// <summary>
+        /// Get user entity if exists
+        /// </summary>
+        /// <param name="user">get user by user.userid</param>
+        /// <returns></returns>
+        Task<User> GetUserWithActiveRolesAsync(User user);
 
-        User SaveUser(User user);
-        bool DeleteUser(int Userid);
-        User UpdateUser(User user);
+        /// <summary>
+        /// Get user by userid
+        /// </summary>
+        /// <param name="UserId"></param>
+        /// <returns>if exists returns User entity</returns>
+        Task<User> GetUserWithActiveRolesAsync(int UserId);
     }
 }

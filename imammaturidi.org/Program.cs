@@ -12,16 +12,18 @@ namespace imammaturidi.org
             var conf = builder.Configuration;
 
             //Kendi ekleyeceklerim bu sınıf içinde....
-            var customServices = new CustomConfigureServices(builder);
-            customServices.AddControllersWithViews();
-            customServices.AddPostgreDbContext();
+            builder.ExtAddPostgreDbContext(configurationManager: conf);
+            builder.ExtInjectDALServices();
+            builder.ExtInjectBLLServices();
+            builder.ExtAddCookieAuth();
+            builder.ExtAddControllersWithViews();
+            
 
 
             // Add services to the container.
             //builder.Services.AddControllersWithViews();
 
             var app = builder.Build();
-            var customMiddleWare = new CustomHttpMiddleware(app);
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
